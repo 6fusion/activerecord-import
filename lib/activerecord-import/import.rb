@@ -137,8 +137,8 @@ class ActiveRecord::Base
     #
     #  # Example synchronizing unsaved/new instances in memory by using a uniqued imported field
     #  posts = [BlogPost.new(:title => "Foo"), BlogPost.new(:title => "Bar")]
-    #  BlogPost.import posts, :synchronize => posts
-    #  puts posts.first.new_record? # => false
+    #  BlogPost.import posts, :synchronize => posts, :synchronize_keys => [:title]
+    #  puts posts.first.persisted? # => true
     #
     # == On Duplicate Key Update (MySQL only)
     #
@@ -276,6 +276,13 @@ class ActiveRecord::Base
     # information on +column_names+, +array_of_attributes_ and
     # +options+.
     def import_without_validations_or_callbacks( column_names, array_of_attributes, options={} )
+      scope_columns, scope_values = scope_attributes.to_a.transpose
+
+      unless scope_columns.blank?
+        column_names.concat scope_columns
+        array_of_attributes.each { |a| a.concat scope_values }
+      end
+
       columns = column_names.each_with_index.map do |name, i|
         column = columns_hash[name.to_s]
 
@@ -310,14 +317,22 @@ class ActiveRecord::Base
     # Returns SQL the VALUES for an INSERT statement given the passed in +columns+
     # and +array_of_attributes+.
     def values_sql_for_columns_and_attributes(columns, array_of_attributes)   # :nodoc:
+      # connection gets called a *lot* in this high intensity loop.
+      # Reuse the same one w/in the loop, otherwise it would keep being re-retreived (= lots of time for large imports)
+      connection_memo = connection
       array_of_attributes.map do |arr|
         my_values = arr.each_with_index.map do |val,j|
           column = columns[j]
 
-          if val.nil? && !sequence_name.blank? && column.name == primary_key
-             connection.next_value_for_sequence(sequence_name)
+          # be sure to query sequence_name *last*, only if cheaper tests fail, because it's costly
+          if val.nil? && column.name == primary_key && !sequence_name.blank?
+             connection_memo.next_value_for_sequence(sequence_name)
           else
-            connection.quote(column.type_cast(val), column)
+            if serialized_attributes.include?(column.name)
+              connection_memo.quote(serialized_attributes[column.name].dump(val), column)
+            else
+              connection_memo.quote(val, column)
+            end
           end
         end
         "(#{my_values.join(',')})"

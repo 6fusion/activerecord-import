@@ -13,6 +13,12 @@ mysql2:
   <<: *common
   adapter: mysql2
 
+mysqlspatial:
+  <<: *mysql
+
+mysqlspatial2:
+  <<: *mysql2
+
 seamless_database_pool:
   <<: *common
   adapter: seamless_database_pool
@@ -26,10 +32,17 @@ postgresql:
   adapter: postgresql
   min_messages: warning
 
+postgis:
+  <<: *postgresql
+
 oracle:
   <<: *common
   adapter: oracle
   min_messages: debug
+
+sqlserver:
+  <<: *common
+  adapter: sqlserver
 
 sqlite:
   adapter: sqlite
@@ -38,3 +51,6 @@ sqlite:
 sqlite3:
   adapter: sqlite3
   database: test.db
+
+spatialite:
+  <<: *sqlite3
