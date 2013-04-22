@@ -27,3 +27,6 @@ test/database.yml
 .redcar/
 .rvmrc
 docsite/
+
+## RubyMine flotsam
+.idea
