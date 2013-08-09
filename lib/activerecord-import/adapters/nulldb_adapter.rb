@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + "/nulldb_adapter"
 
-module ActiveRecord::Import::NulldbAdapter
-  include ActiveRecord::Import::NulldbAdapter
+module ActiveRecord::Import::NullDBAdapter
+  include ActiveRecord::Import::NullDBAdapter
 end

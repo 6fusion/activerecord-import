@@ -26,6 +26,7 @@ group :test do
   end
 
   # Support libs
+  gem 'activerecord-nulldb-adapter', git: 'https://github.com/nulldb/nulldb.git'
   gem "factory_girl", "~> 1.3.3"
   gem "delorean", "~> 0.2.0"
 
